@@ -5,7 +5,7 @@ dataset: [CIFAR-10]
 framework: [Docker, tensorflow]
 ---
 
-# Leveraging Flower and Docker for Device Heterogeneity Management in Federated Learning
+# Experiments leveraging Flower and Docker for Device Heterogeneity Management in a Federated Learning setting
 
 <p align="center">
   <img src="https://flower.ai/_next/image/?url=%2F_next%2Fstatic%2Fmedia%2Fflower_white_border.c2012e70.png&w=640&q=75" width="140px" alt="Flower Website" />
@@ -14,7 +14,19 @@ framework: [Docker, tensorflow]
 
 ## Introduction
 
-In this example, we tackle device heterogeneity in federated learning, arising from differences in memory and CPU capabilities across devices. This diversity affects training efficiency and inclusivity. Our strategy includes simulating this heterogeneity by setting CPU and memory limits in a Docker setup, using a custom Docker compose generator script. This approach creates a varied training environment and enables us to develop strategies to manage these disparities effectively.
+These experiments are part of a thesis project that is being currently designed;
+a lot of inspiration and snippets of code, files and classes, are going to be taken directly from the Flower repository 
+on Github as a direct source of information.
+Please keep in mind the project is evolving every day and it is my personal goal to clarify each phase and obective
+step by step as my research continues.
+
+As a general note, it is evident the flexibility granted with the simulation for the devices heterogeneity,
+which affects training efficiency and inclusivity. 
+The approach used involves simulating this heterogeneity by setting CPU and memory limits in a Docker setup, 
+using a custom Docker compose generator script. 
+This creates a varied training environment and enables us to develop strategies to manage these disparities effectively.
+
+**Note:** The text below is reported directly from the Flower repository.
 
 ## Handling Device Heterogeneity
 

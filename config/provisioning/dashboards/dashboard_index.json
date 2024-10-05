@@ -40,7 +40,7 @@
         "type": "prometheus",
         "uid": "db69454e-e558-479e-b4fc-80db52bf91da"
       },
-      "description": "Averaged federated accuracy across clients",
+      "description": "Averaged federated mape across clients",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -100,7 +100,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 1
       },
@@ -125,7 +125,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "model_accuracy",
+          "expr": "model_mean_absolute_percentage_error",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -135,9 +135,114 @@
           "useBackend": false
         }
       ],
-      "title": "Model Accuracy",
+      "title": "Model MAPE",
       "type": "timeseries"
     },
+
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "db69454e-e558-479e-b4fc-80db52bf91da"
+      },
+      "description": "Averaged federated Cos Sim across clients",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "db69454e-e558-479e-b4fc-80db52bf91da"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "model_cosine_similarity",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "Model Cos Sim",
+      "type": "timeseries"
+    },
+
     {
       "datasource": {
         "type": "prometheus",
@@ -200,8 +305,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 16,
         "y": 1
       },
       "id": 21,

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)  # Create logger for the module
 
 class FedCustom(fl.server.strategy.FedAvg):
     def __init__(
-        self, accuracy_gauge: Gauge = None, cos_gauge: Gauge = None, mape_gauge: Gauge = None, loss_gauge: Gauge = None, *args, **kwargs
+        self, cos_gauge: Gauge = None, mape_gauge: Gauge = None, loss_gauge: Gauge = None, *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
@@ -50,13 +50,12 @@ class FedCustom(fl.server.strategy.FedAvg):
             evaluate_res.metrics["cos"] * evaluate_res.num_examples
             for _, evaluate_res in results
         ]
-
         mapes = [
             evaluate_res.metrics["mape"] * evaluate_res.num_examples
             for _, evaluate_res in results
         ]
-        examples = [evaluate_res.num_examples for _, evaluate_res in results]
 
+        examples = [evaluate_res.num_examples for _, evaluate_res in results]
         # all the metrics aggregated
         cos_aggregated = (
             sum(coss) / sum(examples) if sum(examples) != 0 else 0

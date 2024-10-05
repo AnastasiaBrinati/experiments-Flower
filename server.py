@@ -10,11 +10,9 @@ from strategy.strategy import FedCustom
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define a gauge to track the global model accuracy
-accuracy_gauge = Gauge("model_accuracy", "Current accuracy of the global model")
-
+# Define gauge to track the global model
 # Other metrics
-cos_gauge = Gauge("cosine_similarity", "Current cosine similarity of the global model")
+cos_gauge = Gauge("model_cosine_similarity", "Current cos sim of the global model")
 mape_gauge = Gauge("model_mean_absolute_percentage_error", "Current mape of the global model")
 
 # Define a gauge to track the global model loss
@@ -49,5 +47,5 @@ if __name__ == "__main__":
     start_http_server(8000)
 
     # Initialize Strategy Instance and Start FL Server
-    strategy_instance = FedCustom(accuracy_gauge=accuracy_gauge, cos_gauge=cos_gauge, mape_gauge=mape_gauge, loss_gauge=loss_gauge)
+    strategy_instance = FedCustom(cos_gauge=cos_gauge, mape_gauge=mape_gauge, loss_gauge=loss_gauge)
     start_fl_server(strategy=strategy_instance, rounds=args.number_of_rounds)

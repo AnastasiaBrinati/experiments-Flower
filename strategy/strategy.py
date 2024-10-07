@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)  # Create logger for the module
 
 class FedCustom(fl.server.strategy.FedAvg):
     def __init__(
-        self, cos_gauge: Gauge = None, mape_gauge: Gauge = None, loss_gauge: Gauge = None, *args, **kwargs
+        self, cos_gauge: Gauge = None, mae_gauge: Gauge = None, loss_gauge: Gauge = None, *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
         #self.accuracy_gauge = accuracy_gauge
         self.cos_gauge = cos_gauge
-        self.mape_gauge = mape_gauge
+        self.mae_gauge = mae_gauge
         self.loss_gauge = loss_gauge
 
     def __repr__(self) -> str:
@@ -50,8 +50,8 @@ class FedCustom(fl.server.strategy.FedAvg):
             evaluate_res.metrics["cos"] * evaluate_res.num_examples
             for _, evaluate_res in results
         ]
-        mapes = [
-            evaluate_res.metrics["mape"] * evaluate_res.num_examples
+        maes = [
+            evaluate_res.metrics["mae"] * evaluate_res.num_examples
             for _, evaluate_res in results
         ]
 
@@ -60,15 +60,15 @@ class FedCustom(fl.server.strategy.FedAvg):
         cos_aggregated = (
             sum(coss) / sum(examples) if sum(examples) != 0 else 0
         )
-        mape_aggregated = (
-            sum(mapes) / sum(examples) if sum(examples) != 0 else 0
+        mae_aggregated = (
+            sum(maes) / sum(examples) if sum(examples) != 0 else 0
         )
 
         # Update the Prometheus gauges with the latest aggregated accuracy and loss values
         self.cos_gauge.set(cos_aggregated)
-        self.mape_gauge.set(mape_aggregated)
+        self.mae_gauge.set(mae_aggregated)
         self.loss_gauge.set(loss_aggregated)
 
-        metrics_aggregated = {"loss": loss_aggregated, "cos": cos_aggregated, "mape": mape_aggregated}
+        metrics_aggregated = {"loss": loss_aggregated, "cos": cos_aggregated, "mae": mae_aggregated}
 
         return loss_aggregated, metrics_aggregated

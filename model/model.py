@@ -7,13 +7,14 @@ class Model:
         self.loss_function = tf.keras.losses.MeanSquaredError()  # Loss for regression
         self.model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(12,)),  # Input layer with one feature
+            tf.keras.layers.Dense(6, activation='relu'),
             tf.keras.layers.Dense(1)  # Output layer with one unit for regression
         ])
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
     def compile(self):
         # Compile the model with the optimizer and the loss function for regression
-        self.model.compile(optimizer=self.optimizer, loss=self.loss_function, metrics=["cosine_similarity", "mean_absolute_percentage_error"])
+        self.model.compile(optimizer=self.optimizer, loss=self.loss_function, metrics=["cosine_similarity", tf.keras.metrics.MeanAbsoluteError()])
 
     def get_model(self):
         return self.model

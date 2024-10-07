@@ -20,7 +20,7 @@ def load_data(data_sampling_percentage=0.5, client_id=1, total_clients=2):
     """
 
     # Download and partition dataset
-    fds = FederatedDataset(dataset="anastasiafrosted/func_prova", partitioners={"train": total_clients})
+    fds = FederatedDataset(dataset="anastasiafrosted/scaled_prova", partitioners={"train": total_clients})
     partition = fds.load_partition(client_id - 1, "train")
     partition.set_format("numpy")
 

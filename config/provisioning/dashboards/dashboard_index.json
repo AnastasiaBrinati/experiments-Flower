@@ -40,7 +40,7 @@
         "type": "prometheus",
         "uid": "db69454e-e558-479e-b4fc-80db52bf91da"
       },
-      "description": "Averaged federated mape across clients",
+      "description": "Averaged federated MAE across clients",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -125,7 +125,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "model_mean_absolute_percentage_error",
+          "expr": "model_mean_absolute_error",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -135,7 +135,7 @@
           "useBackend": false
         }
       ],
-      "title": "Model MAPE",
+      "title": "Model MAE",
       "type": "timeseries"
     },
 

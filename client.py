@@ -75,7 +75,7 @@ class Client(fl.client.NumPyClient):
         # Calculate evaluation metric
         results = {
             "cosine_similarity": float(history.history["cosine_similarity"][-1]),
-            "mean_absolute_percentage_error": float(history.history["mean_absolute_percentage_error"][-1]),
+            "mean_absolute_error": float(history.history["mean_absolute_error"][-1]),
         }
 
         # Get the parameters after training
@@ -94,7 +94,7 @@ class Client(fl.client.NumPyClient):
         )
 
         # Return the loss, the number of examples evaluated on and the accuracy
-        return float(metrics[0]), len(self.x_test), {"cos": float(metrics[1]), "mape": float(metrics[2])}
+        return float(metrics[0]), len(self.x_test), {"cos": float(metrics[1]), "mae": float(metrics[2])}
 
 
 # Function to Start the Client

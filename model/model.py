@@ -6,7 +6,7 @@ class Model:
         self.learning_rate = learning_rate
         self.loss_function = tf.keras.losses.MeanSquaredError()  # Loss for regression
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(12,)),  # Input layer with one feature
+            tf.keras.layers.Input(shape=(30,)),  # Input layer with one feature
             tf.keras.layers.Dense(6, activation='relu'),
             tf.keras.layers.Dense(1)  # Output layer with one unit for regression
         ])

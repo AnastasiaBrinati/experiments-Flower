@@ -10,15 +10,15 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Load the CSV files into DataFrames
-dur = spark.read.csv("dur.csv", header=True, inferSchema=True)
+dur = spark.read.csv("azure_data/dur.csv", header=True, inferSchema=True)
 # Drop some columns after partitioning
 durations = dur.drop('Minimum','Maximum','percentile_Average_0','percentile_Average_1','percentile_Average_25','percentile_Average_50','percentile_Average_75','percentile_Average_99','percentile_Average_100')
 
-mem = spark.read.csv("mem.csv", header=True, inferSchema=True)
+mem = spark.read.csv("azure_data/mem.csv", header=True, inferSchema=True)
 # Drop
 memory = mem.drop('AverageAllocatedMb_pct1','AverageAllocatedMb_pct5','AverageAllocatedMb_pct25','AverageAllocatedMb_pct50','AverageAllocatedMb_pct75','AverageAllocatedMb_pct95','AverageAllocatedMb_pct99','AverageAllocatedMb_pct100')
 
-func = spark.read.csv("func.csv", header=True, inferSchema=True)
+func = spark.read.csv("azure_data/azure.csv", header=True, inferSchema=True)
 
 # Specify the columns on which to join the DataFrames
 join_columns = ['HashOwner', 'HashApp']  # Columns common to both DataFrames
@@ -55,12 +55,6 @@ melted_rdd = rdd.flatMap(lambda row: [
 
 # Convert the transformed RDD back to a DataFrame
 filtered_df = spark.createDataFrame(melted_rdd)
-
-filtered_df.show(10)
-
-# delete later
-partitioned_df = filtered_df.drop('HashOwner', 'HashApp')
-partitioned_df.write.csv("total/", header=True)
 
 '''
 # Scaling
@@ -116,6 +110,13 @@ partitioned_df.show(10)
 partitioned_df.write.csv("partitioned_data/", header=True)
 '''
 
+# shuffle
+shuffled_df = filtered_df.sample(withReplacement=False, fraction=1.0, seed=42).repartition(filtered_df.rdd.getNumPartitions())
+
+# Repartition the DataFrame
+df_repartitioned = shuffled_df.repartition(1)
+# Save the DataFrame in CSV format
+df_repartitioned.write.format("csv").option("header", "true").save("azure_data/total")
 
 
 # Stop Spark session

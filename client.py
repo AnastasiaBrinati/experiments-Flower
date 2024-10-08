@@ -4,7 +4,8 @@ import os
 
 import flwr as fl
 import tensorflow as tf
-from helpers.load_data import load_data
+from helpers.load_data import load_azure_data
+from helpers.load_data import load_globus_data
 
 from model.model import Model
 
@@ -48,7 +49,7 @@ class Client(fl.client.NumPyClient):
         self.args = args
 
         logger.info("Preparing data...")
-        (x_train, y_train), (x_test, y_test) = load_data(
+        (x_train, y_train), (x_test, y_test) = load_globus_data(
             data_sampling_percentage=self.args.data_percentage,
             client_id=self.args.client_id,
             total_clients=self.args.total_clients,

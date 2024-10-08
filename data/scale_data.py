@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.ml.feature import VectorAssembler, StandardScaler
-from pyspark.sql.types import IntegerType, FloatType, DoubleType, ArrayType
+from pyspark.sql.types import NumericType, ArrayType, DoubleType
 from pyspark.sql.functions import col, udf
 from pyspark.ml import Pipeline  # Import Pipeline
 
@@ -12,10 +12,9 @@ def scale_csv_data(input_path, output_path):
 
     # Load the CSV file into a DataFrame
     df = spark.read.csv(input_path, header=True, inferSchema=True)
-    df = df.drop("HashFunction")
 
     # Identify numeric columns
-    numeric_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, (IntegerType, FloatType, DoubleType))]
+    numeric_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, NumericType)]
 
     # Assemble numeric columns into a feature vector
     assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features")
@@ -50,6 +49,6 @@ def scale_csv_data(input_path, output_path):
     spark.stop()
 
 # Example usage
-input_csv_path = "func_test.csv"
-output_csv_path = "func_test_scaled"
+input_csv_path = "globus_data/total/globus_cleaned.csv"
+output_csv_path = "scaled_data/globus/"
 scale_csv_data(input_csv_path, output_csv_path)

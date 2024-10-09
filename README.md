@@ -1,7 +1,7 @@
 ---
 title: Experiments
 tags: [deployment, vision, tutorial]
-dataset: [AzurePublicDataset: Functions]
+dataset: [AzurePublicDataset: Functions, GlobusCompute: all]
 framework: [Docker, tensorflow]
 ---
 

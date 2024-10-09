@@ -90,6 +90,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    privileged: true
     command: python server.py --number_of_rounds={args.num_rounds}
     environment:
       FLASK_RUN_PORT: 6000

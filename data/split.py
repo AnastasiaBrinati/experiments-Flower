@@ -29,6 +29,6 @@ def split_csv_data(input_path, output_path):
 
 
 # Example usage
-input_csv_path = "scaled_data/globus/scaled_globus.csv"
+input_csv_path = "scaled_data/globus/globus_scaled.csv"
 output_csv_path = "scaled_data/globus/globus_30"
 split_csv_data(input_csv_path, output_csv_path)

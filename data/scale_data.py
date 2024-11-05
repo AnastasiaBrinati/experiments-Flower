@@ -49,6 +49,6 @@ def scale_csv_data(input_path, output_path):
     spark.stop()
 
 # Example usage
-input_csv_path = "globus_data/total/globus_cleaned.csv"
+input_csv_path = "globus_data/total/globus.csv"
 output_csv_path = "scaled_data/globus/"
 scale_csv_data(input_csv_path, output_csv_path)

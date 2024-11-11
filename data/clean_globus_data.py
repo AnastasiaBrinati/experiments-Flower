@@ -6,6 +6,8 @@ from pyspark.sql.functions import isnan
 from pyspark.sql.types import LongType
 from pyspark.sql.functions import col, from_unixtime, date_format, hour, minute, second, udf
 
+#from data.read_csv import timestamps
+
 # Initialize Spark session
 spark = SparkSession.builder \
     .appName("Melt and Filter RDD") \
@@ -87,6 +89,7 @@ melted_rdd = rdd.flatMap(lambda row: [
         endpoint_uuid=row['endpoint_uuid'],
         task_uuid=row['task_uuid'],
 
+        timestamp = f"{row['date_received']} {row['hour_received']:02}:{row['minute_received']:02}:{row['second_received']:02}",
         date = row['date_received'],
         hour = row['hour_received'],
         minute = row['minute_received'],
@@ -96,6 +99,7 @@ melted_rdd = rdd.flatMap(lambda row: [
         scheduling_time=row['waiting_for_launch'] - row['waiting_for_nodes'], # time between the task received by an endpoint and the task assigned to a worker
         queue_time=row['execution_start'] - row['waiting_for_launch'], # time between the task assigned to a worker and the execution start
         execution_time=row['execution_end'] - row['execution_start'], # time between the task execution start and end
+        results_time=row['result_received'] - row['execution_end'],
         total_execution_time=row['result_received'] - row['received'], # time between the task arriving and the results being reported, to the could platform
 
         argument_size=row['argument_size'],
@@ -123,7 +127,7 @@ df.show(truncate=False)
 # Repartition the DataFrame
 df_repartitioned = df.repartition(1)
 # Save the DataFrame in CSV format
-df_repartitioned.write.format("csv").option("header", "true").save("globus_data/total")
+df_repartitioned.write.format("csv").option("header", "true").mode("overwrite").save("globus_data/total")
 
 # Stop Spark session
 spark.stop()

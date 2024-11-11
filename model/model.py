@@ -2,11 +2,11 @@ import tensorflow as tf
 
 # Class for the linear regression model
 class Model:
-    def __init__(self, learning_rate):
+    def __init__(self, learning_rate, num_features):
         self.learning_rate = learning_rate
         self.loss_function = tf.keras.losses.MeanSquaredError()  # Loss for regression
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(30,)),  # Input layer with one feature
+            tf.keras.layers.Input(shape=(num_features,)),  # Input layer with one feature
             tf.keras.layers.Dense(6, activation='relu'),
             tf.keras.layers.Dense(1)  # Output layer with one unit for regression
         ])

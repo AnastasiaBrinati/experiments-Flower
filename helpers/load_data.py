@@ -91,120 +91,47 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
     """
 
     # Download and partition dataset
-    fds = FederatedDataset(dataset="anastasiafrosted/globus_prova", partitioners={"train": total_clients})
-    partition = fds.load_partition(client_id - 1, "train")
-    partition.set_format("numpy")
+    fds_train = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"train": total_clients})
+    partition_train = fds_train.load_partition(client_id - 1, "train")
+    partition_train.set_format("numpy")
 
     # Divide data on each client: 80% train, 20% test
-    partition = partition.train_test_split(test_size=0.2, seed=42)
+    #partition = partition.train_test_split(test_size=0.2, seed=42)
+    fds_test = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"test": total_clients})
+    partition_test = fds_test.load_partition(client_id - 1, "test")
+    partition_test.set_format("numpy")
 
-    # Extract the relevant columns
-    assignment_time = partition["train"]["assignment_time"]
-    scheduling_time = partition["train"]["scheduling_time"]
-    queue_time = partition["train"]["queue_time"]
-    execution_time = partition["train"]["execution_time"]
+    # Extract features for training and testing sets
+    feature_columns = [
+        "hour_seq", "minute_seq", "second_seq", "assignment_time_seq",
+        "scheduling_time_seq", "queue_time_seq", "results_time_seq", "total_execution_time_seq",
+        "argument_size_seq", "loc_seq", "num_of_imports_seq",
+        "e_type_LSFProvider_seq", "e_type_CobaltProvider_seq", "e_type_PBSProProvider_seq",
+        "e_type_LocalProvider_seq", "e_type_KubernetesProvider_seq", "e_type_SlurmProvider_seq",
+        # TARGET 1: "execution_time_seq",
+        # TARGET 2: "cyc_complexity_seq"
+    ]
 
-    argument_size = partition["train"]["argument_size"]
-    loc = partition["train"]["loc"]
-    cyc_complexity = partition["train"]["cyc_complexity"]
-    num_of_imports = partition["train"]["num_of_imports"]
+    timestamps_columns = [
+        "timestamp_seq", "date_seq"
+    ]
 
-    e_type_LSFProvider = partition["train"]["e_type_LSFProvider"]
-    e_type_CobaltProvider = partition["train"]["e_type_CobaltProvider"]
-    e_type_PBSProProvider = partition["train"]["e_type_PBSProProvider"]
-    e_type_LocalProvider = partition["train"]["e_type_LocalProvider"]
-    e_type_KubernetesProvider = partition["train"]["e_type_KubernetesProvider"]
-    e_type_SlurmProvider = partition["train"]["e_type_SlurmProvider"]
+    # THIS IS WHERE IT CHANGES !!!!
+    # Convert feature columns to a 3D numpy array (num_samples, sequence_length, num_features)
+    x_train = np.stack([partition_train[col] for col in feature_columns], axis=-1)
+    x_test = np.stack([partition_test[col] for col in feature_columns], axis=-1)
+    #logger.info("   CREATING x_test_timestamps...")
+    x_test_timestamps = np.stack([partition_test[col].astype(str) for col in timestamps_columns], axis=-1)
+    #logger.info("   CREATED x_test_timestamps...")
 
-    e_vers_2_0_1 = partition["train"]["e_vers_2_0_1"]
-    e_vers_1_0_8 = partition["train"]["e_vers_1_0_8"]
-    e_vers_1_0_13 = partition["train"]["e_vers_1_0_13"]
-    e_vers_2_1_0a1 = partition["train"]["e_vers_2_1_0a1"]
-    e_vers_1_0_11a1 = partition["train"]["e_vers_1_0_11a1"]
-    e_vers_1_0_12 = partition["train"]["e_vers_1_0_12"]
-    e_vers_2_0_2a0 = partition["train"]["e_vers_2_0_2a0"]
-    e_vers_2_1_0 = partition["train"]["e_vers_2_1_0"]
-    e_vers_1_0_10 = partition["train"]["e_vers_1_0_10"]
-    e_vers_2_0_0 = partition["train"]["e_vers_2_0_0"]
-    e_vers_2_0_0a0 = partition["train"]["e_vers_2_0_0a0"]
-    e_vers_2_0_3 = partition["train"]["e_vers_2_0_3"]
-    e_vers_2_0_2 = partition["train"]["e_vers_2_0_2"]
-    e_vers_2_0_1a0 = partition["train"]["e_vers_2_0_1a0"]
-    e_vers_2_0_1a1 = partition["train"]["e_vers_2_0_1a1"]
-    e_vers_1_0_11 = partition["train"]["e_vers_1_0_11"]
-
-
-#########################
-
-    assignment_time_test = partition["test"]["assignment_time"]
-    scheduling_time_test = partition["test"]["scheduling_time"]
-    queue_time_test = partition["test"]["queue_time"]
-    execution_time_test = partition["test"]["execution_time"]
-
-    argument_size_test = partition["test"]["argument_size"]
-    loc_test = partition["test"]["loc"]
-    cyc_complexity_test = partition["test"]["cyc_complexity"]
-    num_of_imports_test = partition["test"]["num_of_imports"]
-
-    e_type_LSFProvider_test = partition["test"]["e_type_LSFProvider"]
-    e_type_CobaltProvider_test = partition["test"]["e_type_CobaltProvider"]
-    e_type_PBSProProvider_test = partition["test"]["e_type_PBSProProvider"]
-    e_type_LocalProvider_test = partition["test"]["e_type_LocalProvider"]
-    e_type_KubernetesProvider_test = partition["test"]["e_type_KubernetesProvider"]
-    e_type_SlurmProvider_test = partition["test"]["e_type_SlurmProvider"]
-
-    e_vers_2_0_1_test = partition["test"]["e_vers_2_0_1"]
-    e_vers_1_0_8_test = partition["test"]["e_vers_1_0_8"]
-    e_vers_1_0_13_test = partition["test"]["e_vers_1_0_13"]
-    e_vers_2_1_0a1_test = partition["test"]["e_vers_2_1_0a1"]
-    e_vers_1_0_11a1_test = partition["test"]["e_vers_1_0_11a1"]
-    e_vers_1_0_12_test = partition["test"]["e_vers_1_0_12"]
-    e_vers_2_0_2a0_test = partition["test"]["e_vers_2_0_2a0"]
-    e_vers_2_1_0_test = partition["test"]["e_vers_2_1_0"]
-    e_vers_1_0_10_test = partition["test"]["e_vers_1_0_10"]
-    e_vers_2_0_0_test = partition["test"]["e_vers_2_0_0"]
-    e_vers_2_0_0a0_test = partition["test"]["e_vers_2_0_0a0"]
-    e_vers_2_0_3_test = partition["test"]["e_vers_2_0_3"]
-    e_vers_2_0_2_test = partition["test"]["e_vers_2_0_2"]
-    e_vers_2_0_1a0_test = partition["test"]["e_vers_2_0_1a0"]
-    e_vers_2_0_1a1_test = partition["test"]["e_vers_2_0_1a1"]
-    e_vers_1_0_11_test = partition["test"]["e_vers_1_0_11"]
-
-
-
-    # Combine all features into a single array with multiple features per sample (for both training and test sets)
-    x_train = np.column_stack((
-        assignment_time, scheduling_time,
-        queue_time, execution_time,
-        argument_size, loc, cyc_complexity, num_of_imports,
-        e_type_LSFProvider, e_type_CobaltProvider, e_type_PBSProProvider,
-        e_type_LocalProvider, e_type_KubernetesProvider, e_type_SlurmProvider,
-        e_vers_2_0_1, e_vers_1_0_8, e_vers_1_0_13, e_vers_2_1_0a1,
-        e_vers_1_0_11a1, e_vers_1_0_12, e_vers_2_0_2a0, e_vers_2_1_0,
-        e_vers_1_0_10, e_vers_2_0_0, e_vers_2_0_0a0, e_vers_2_0_3,
-        e_vers_2_0_2, e_vers_2_0_1a0, e_vers_2_0_1a1, e_vers_1_0_11
-    ))
-
-    x_test = np.column_stack((
-        assignment_time_test, scheduling_time_test,
-        queue_time_test, execution_time_test,
-        argument_size_test, loc_test, cyc_complexity_test, num_of_imports_test,
-        e_type_LSFProvider_test, e_type_CobaltProvider_test, e_type_PBSProProvider_test,
-        e_type_LocalProvider_test, e_type_KubernetesProvider_test, e_type_SlurmProvider_test,
-        e_vers_2_0_1_test, e_vers_1_0_8_test, e_vers_1_0_13_test, e_vers_2_1_0a1_test,
-        e_vers_1_0_11a1_test, e_vers_1_0_12_test, e_vers_2_0_2a0_test, e_vers_2_1_0_test,
-        e_vers_1_0_10_test, e_vers_2_0_0_test, e_vers_2_0_0a0_test, e_vers_2_0_3_test,
-        e_vers_2_0_2_test, e_vers_2_0_1a0_test, e_vers_2_0_1a1_test, e_vers_1_0_11_test
-
-    ))
-
-    # The label is 'invocations'
-    y_train = partition["train"]["total_execution_time"]
-    y_test = partition["test"]["total_execution_time"]
+    # The label is 'total_execution_time'
+    y_train = np.stack([partition_train[tar] for tar in ["execution_time_seq", "cyc_complexity_seq"]], axis=-1)
+    y_test = np.stack([partition_test[tar] for tar in ["execution_time_seq", "cyc_complexity_seq"]], axis=-1)
 
     # Apply data sampling
     num_samples = int(data_sampling_percentage * len(x_train))
     indices = np.random.choice(len(x_train), num_samples, replace=False)
     x_train, y_train = x_train[indices], y_train[indices]
 
-    return (x_train, y_train), (x_test, y_test)
+    #logger.info("   RETURNING (x_train, y_train), (x_test, x_test_timestamps, y_test)...")
+    return (x_train, y_train), (x_test, x_test_timestamps, y_test)

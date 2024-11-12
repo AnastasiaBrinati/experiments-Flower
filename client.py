@@ -12,7 +12,7 @@ from model.model import Model
 from model.lstm import Lstm
 
 logging.basicConfig(level=logging.INFO)  # Configure logging
-logger = logging.getLogger(__name__)  # Create logger for the module
+logger = logging.getLogger(__name__)  # Create logger for the modulef
 
 # Make TensorFlow log less verbose
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"

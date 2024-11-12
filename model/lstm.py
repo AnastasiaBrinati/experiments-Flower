@@ -8,6 +8,7 @@ class Lstm:
         self.sequence_length = sequence_length  # Number of timesteps in each sequence
         self.num_features = num_features  # Number of features per timestep
 
+
         # Define the LSTM-based model
         self.model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(self.sequence_length, self.num_features)),  # Input shape for LSTM

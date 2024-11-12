@@ -95,8 +95,6 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
     partition_train = fds_train.load_partition(client_id - 1, "train")
     partition_train.set_format("numpy")
 
-    # Divide data on each client: 80% train, 20% test
-    #partition = partition.train_test_split(test_size=0.2, seed=42)
     fds_test = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"test": total_clients})
     partition_test = fds_test.load_partition(client_id - 1, "test")
     partition_test.set_format("numpy")
@@ -116,22 +114,20 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
         "timestamp_seq", "date_seq"
     ]
 
-    # THIS IS WHERE IT CHANGES !!!!
+    # THIS IS WHERE IT CHANGES FOR THE MODEL!!!!
     # Convert feature columns to a 3D numpy array (num_samples, sequence_length, num_features)
     x_train = np.stack([partition_train[col] for col in feature_columns], axis=-1)
     x_test = np.stack([partition_test[col] for col in feature_columns], axis=-1)
-    #logger.info("   CREATING x_test_timestamps...")
+    # this is being added for the graph
     x_test_timestamps = np.stack([partition_test[col].astype(str) for col in timestamps_columns], axis=-1)
-    #logger.info("   CREATED x_test_timestamps...")
 
-    # The label is 'total_execution_time'
-    y_train = np.stack([partition_train[tar] for tar in ["execution_time_seq", "cyc_complexity_seq"]], axis=-1)
-    y_test = np.stack([partition_test[tar] for tar in ["execution_time_seq", "cyc_complexity_seq"]], axis=-1)
+    # Stack target features
+    y_train = np.stack([partition_train[tar] for tar in ["execution_time_target", "cyc_complexity_target"]], axis=-1)
+    y_test = np.stack([partition_test[tar] for tar in ["execution_time_target", "cyc_complexity_target"]], axis=-1)
 
     # Apply data sampling
     num_samples = int(data_sampling_percentage * len(x_train))
     indices = np.random.choice(len(x_train), num_samples, replace=False)
     x_train, y_train = x_train[indices], y_train[indices]
 
-    #logger.info("   RETURNING (x_train, y_train), (x_test, x_test_timestamps, y_test)...")
     return (x_train, y_train), (x_test, x_test_timestamps, y_test)

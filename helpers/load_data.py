@@ -90,6 +90,9 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
         Tuple of arrays: `(x_train, y_train), (x_test, y_test)`.
     """
 
+    # Devo inventarmi qualcosa con il client id per il dataset su hgging face così
+    # scarico direttamente un endpoint per client
+
     # Download and partition dataset
     fds_train = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"train": total_clients})
     partition_train = fds_train.load_partition(client_id - 1, "train")

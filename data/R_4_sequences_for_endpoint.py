@@ -24,11 +24,11 @@ train_data = train_data.withColumn("row_num", row_number().over(window))
 test_data = test_data.withColumn("row_num", row_number().over(window))
 
 # Define input and output features
-input_features = ["timestamp", "invocations_per_minute",
-                  "avg_argument_size", "avg_loc", "avg_cyc_complexity", "avg_num_of_imports",
+input_features = ["timestamp",
+                  "invocations_per_minute", "avg_argument_size", "avg_loc", "avg_cyc_complexity", "avg_num_of_imports",
                   "e_type_LSFProvider", "e_type_CobaltProvider", "e_type_PBSProProvider",
                   "e_type_LocalProvider", "e_type_KubernetesProvider", "e_type_SlurmProvider"]
-output_features = ["avg_execution_time", "avg_scheduling_time"]
+output_features = ["timestamp", "avg_execution_time", "avg_scheduling_time"]
 
 # Step 3: Create sliding window sequences for input and target features
 sliding_window = Window.orderBy("row_num").rowsBetween(0, total_length - 1)

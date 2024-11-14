@@ -27,7 +27,7 @@ def split_csv_data(input_path, output_path):
     print(f"Maximum date: {max_date}")
 
     # Calculate the cutoff date
-    cutoff_date = max_date - timedelta(days=21)
+    cutoff_date = max_date - timedelta(days=7)
     print(f"Cutoff date: {cutoff_date}")
 
     # Split the data into training and testing sets based on the timestamp
@@ -48,6 +48,6 @@ def split_csv_data(input_path, output_path):
 
 
 # Example usage
-input_csv_path = "scaled_data/globus/endpoints/endpoint2/scaled_endpoint_2.csv"
-output_csv_path = "scaled_data/globus/endpoints/endpoint2/split"
+input_csv_path = "scaled_data/globus/endpoints/endpoint1/scaled_endpoint_1.csv"
+output_csv_path = "scaled_data/globus/endpoints/endpoint1/split"
 split_csv_data(input_csv_path, output_csv_path)

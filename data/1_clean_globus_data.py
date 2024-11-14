@@ -46,35 +46,6 @@ df = df.withColumn("hour_received", hour(from_unixtime((col("received") / 1_000_
 df = df.withColumn("minute_received", minute(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
 df = df.withColumn("second_received", second(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
 
-"""
-# Checking the results
-df.select("timestamp_received", "date_received", "hour_received", "minute_received", "second_received",).show(truncate=False)
-
-from pyspark.sql import functions as F
-
-# Calculate min and max for 'day', 'h', 'min' and 'sec'
-min_max_df = df.agg(
-    F.min("day").alias("min_date"),
-    F.max("date").alias("max_date"),
-    F.min("hour").alias("min_hour_received"),
-    F.max("hour").alias("max_hour"),
-    F.min("minute").alias("min_minute_received"),
-    F.max("minute").alias("max_minute"),
-    F.min("second").alias("min_second_received"),
-    F.max("second").alias("max_second")
-)
-
-# Show the min and max values
-min_max_df.show(truncate=False)
-
-# +----------+----------+-------+-------+-------+-------+-----------+-----------+
-# |min_giorno|max_giorno|min_ora|max_ora|min_min|max_min|min_secondo|max_secondo|
-# +----------+----------+-------+-------+-------+-------+-----------+-----------+
-# |2022-12-20|2023-07-03|0      |23     |0      |59     |0          |59         |
-# +----------+----------+-------+-------+-------+-------+-----------+-----------+
-
-"""
-
 # Convert the DataFrame to an RDD
 rdd = df.rdd
 

@@ -93,44 +93,41 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
     # Devo inventarmi qualcosa con il client id per il dataset su hgging face così
     # scarico direttamente un endpoint per client
 
+    dataset_path = "anastasiafrosted/my_sequences_endpoint"+str(client_id)+"_hour"
+
     # Download and partition dataset
-    fds_train = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"train": total_clients})
+    fds_train = FederatedDataset(dataset=dataset_path, partitioners={"train": total_clients})
     partition_train = fds_train.load_partition(client_id - 1, "train")
     partition_train.set_format("numpy")
 
-    fds_test = FederatedDataset(dataset="anastasiafrosted/my_sequences_dataset", partitioners={"test": total_clients})
+    fds_test = FederatedDataset(dataset=dataset_path, partitioners={"test": total_clients})
     partition_test = fds_test.load_partition(client_id - 1, "test")
     partition_test.set_format("numpy")
 
     # Extract features for training and testing sets
-    feature_columns = [
-        "hour_seq", "minute_seq", "second_seq", "assignment_time_seq",
-        "scheduling_time_seq", "queue_time_seq", "results_time_seq", "total_execution_time_seq",
-        "argument_size_seq", "loc_seq", "num_of_imports_seq",
+    input_features = [
+        "invocations_per_hour_seq",
+        "avg_argument_size_seq", "avg_loc_seq", "avg_num_of_imports_seq", "avg_cyc_complexity_seq",
         "e_type_LSFProvider_seq", "e_type_CobaltProvider_seq", "e_type_PBSProProvider_seq",
         "e_type_LocalProvider_seq", "e_type_KubernetesProvider_seq", "e_type_SlurmProvider_seq",
-        # TARGET 1: "execution_time_seq",
-        # TARGET 2: "cyc_complexity_seq"
     ]
 
     timestamps_columns = [
-        "timestamp_seq", "date_seq"
+        "timestamp_seq", "timestamp_target"
     ]
 
+    target_features = ["avg_execution_time_target", "avg_scheduling_time_target"]
+
     # THIS IS WHERE IT CHANGES FOR THE MODEL!!!!
+
     # Convert feature columns to a 3D numpy array (num_samples, sequence_length, num_features)
-    x_train = np.stack([partition_train[col] for col in feature_columns], axis=-1)
-    x_test = np.stack([partition_test[col] for col in feature_columns], axis=-1)
-    # this is being added for the graph
-    x_test_timestamps = np.stack([partition_test[col].astype(str) for col in timestamps_columns], axis=-1)
+    x_train = np.stack([partition_train[col] for col in input_features], axis=-1)
+    x_test = np.stack([partition_test[col] for col in input_features], axis=-1)
+    # this is being added for the grap
+    x_test_timestamps = partition_test[timestamps_columns[1]]
 
     # Stack target features
-    y_train = np.stack([partition_train[tar] for tar in ["execution_time_target", "cyc_complexity_target"]], axis=-1)
-    y_test = np.stack([partition_test[tar] for tar in ["execution_time_target", "cyc_complexity_target"]], axis=-1)
-
-    # Apply data sampling
-    num_samples = int(data_sampling_percentage * len(x_train))
-    indices = np.random.choice(len(x_train), num_samples, replace=False)
-    x_train, y_train = x_train[indices], y_train[indices]
+    y_train = np.stack([partition_train[tar] for tar in target_features], axis=-1)
+    y_test = np.stack([partition_test[tar] for tar in target_features], axis=-1)
 
     return (x_train, y_train), (x_test, x_test_timestamps, y_test)

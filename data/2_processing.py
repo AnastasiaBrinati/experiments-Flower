@@ -24,10 +24,9 @@ globus = globus.join(functions, on=['function_uuid'], how='inner').dropna(how='a
 
 globus = globus.withColumn("date", date_format(from_unixtime((col("received") / 1_000_000_000).cast(LongType())), "yyyy-MM-dd"))
 globus = globus.withColumn("hour", hour(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
-globus = globus.withColumn("minute", minute(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
 
 # Creazione della colonna 'minute'
-df = globus.withColumn("timestamp", concat_ws(":", col("date"), col("hour"), col("minute")))
+df = globus.withColumn("timestamp", concat_ws(":", col("date"), col("hour")))
 # Calcolo della differenza timestamps in  nuove colonne
 df = df.withColumn("execution_time", (col("execution_end") - col("execution_start")))
 df = df.withColumn("scheduling_time", (col("execution_start") - col("received")))
@@ -47,7 +46,7 @@ for e_type in unique_endpoint_types:
 result = (
     df.groupBy("endpoint_uuid", "timestamp")
     .agg(
-        count("*").alias("invocations_per_minute"),  # Numero di invocazioni
+        count("*").alias("invocations_per_hour"),  # Numero di invocazioni
         avg("loc").alias("avg_loc"),  # Media delle linee di codice
         avg("cyc_complexity").alias("avg_cyc_complexity"),  # Media della complessità ciclica
         avg("num_of_imports").alias("avg_num_of_imports"),  # Media del numero di importazioni

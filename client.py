@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import pandas as pd
+import numpy as np
 
 import flwr as fl
 import tensorflow as tf
@@ -27,7 +28,7 @@ parser.add_argument(
     "--batch_size", type=int, default=32, help="Batch size for training"
 )
 parser.add_argument(
-    "--learning_rate", type=float, default=0.1, help="Learning rate for the optimizer"
+    "--learning_rate", type=float, default=0.001, help="Learning rate for the optimizer"
 )
 parser.add_argument("--client_id", type=int, default=1, help="Unique ID for the client")
 parser.add_argument(
@@ -43,7 +44,7 @@ args = parser.parse_args()
 # BASE
 #model = Model(learning_rate=args.learning_rate, num_features=30)
 # LSTM
-model = Lstm(learning_rate=args.learning_rate, sequence_length=7,num_features=17)
+model = Lstm(learning_rate=args.learning_rate, sequence_length=7,num_features=11)
 
 # Compile the model
 model.compile()
@@ -90,21 +91,31 @@ class Client(fl.client.NumPyClient):
         # Get predictions
         predictions = model.get_model().predict(self.x_test)
 
-        # Separate predictions for each target
+        # Step 1: Take the predicted and actual target features
         predicted_execution_time = predictions[:, :, 0]  # First target
+        actual_execution_time = self.x_test[:, :, 0]
         predicted_cyc_complexity = predictions[:, :, 1]  # Second target
+        actual_cyc_complexity = self.x_test[:, :, 1]
 
-        # Optionally log predictions for the first few samples
-        # logger.info("Predictions for the first sample (execution_time): %s", predicted_execution_time[0])
-        # logger.info("Predictions for the first sample (cyc_complexity): %s", predicted_cyc_complexity[0])
+        # now apply a -most-recent-prediction- strategy
+        # Step 2: Take the first value of each sequence and stop before the last one
+        predicted_execution_time = np.array([seq[0] for seq in predicted_execution_time])
+        predicted_cyc_complexity = np.array([seq[0] for seq in predicted_cyc_complexity])
+
+        # we do the same on the actual values just to reuse code but the values of course are repeated on rows
+        actual_execution_time = np.array([seq[0] for seq in actual_execution_time])
+        actual_cyc_complexity = np.array([seq[0] for seq in actual_cyc_complexity])
+
+        # Organize the timestamps with the same order as the predictions:
+        timestamps = np.array([timestamps[0] for timestamps in self.x_test_timestamps])
 
         # Combine predictions and actual values
         data = {
-            "timestamps": [self.x_test_timestamps],
-            "actual_execution_time": [self.y_test[:, :, 0]],
-            "predicted_execution_time": [predicted_execution_time],
-            "actual_cyc_complexity":  [self.y_test[:, :, 1]],
-            "predicted_cyc_complexity": [predicted_cyc_complexity],
+            "timestamps": timestamps,
+            "actual_execution_time": actual_execution_time,
+            "predicted_execution_time": predicted_execution_time,
+            "actual_cyc_complexity":  actual_cyc_complexity,
+            "predicted_cyc_complexity": predicted_cyc_complexity,
         }
 
         # Convert to a Pandas DataFrame

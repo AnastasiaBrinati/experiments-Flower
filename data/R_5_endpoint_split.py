@@ -48,6 +48,6 @@ def split_csv_data(input_path, output_path):
 
 
 # Example usage
-input_csv_path = "scaled_data/globus/endpoints/endpoint1/scaled_endpoint_1.csv"
-output_csv_path = "scaled_data/globus/endpoints/endpoint1/split"
+input_csv_path = "scaled_data/globus/endpoints/endpoint2/scaled_endpoint2.csv"
+output_csv_path = "scaled_data/globus/endpoints/endpoint2/split"
 split_csv_data(input_csv_path, output_csv_path)

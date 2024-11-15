@@ -8,8 +8,8 @@ from pyspark.sql.types import IntegerType
 spark = SparkSession.builder.appName("LSTMSequencePreparation").getOrCreate()
 
 # Load data and assume the CSV file includes the required columns
-train_data = spark.read.csv("scaled_data/globus/endpoints/endpoint1/split/train/endpoint1_train.csv", header=True, inferSchema=True)
-test_data = spark.read.csv("scaled_data/globus/endpoints/endpoint1/split/test/endpoint1_test.csv", header=True, inferSchema=True)
+train_data = spark.read.csv("scaled_data/globus/endpoints/endpoint2/split/train/endpoint2_train.csv", header=True, inferSchema=True)
+test_data = spark.read.csv("scaled_data/globus/endpoints/endpoint2/split/test/endpoint2_test.csv", header=True, inferSchema=True)
 
 # Step 0: Sequence and prediction lengths
 sequence_length = 7
@@ -25,7 +25,7 @@ test_data = test_data.withColumn("row_num", row_number().over(window))
 
 # Define input and output features
 input_features = ["timestamp",
-                  "invocations_per_minute", "avg_argument_size", "avg_loc", "avg_cyc_complexity", "avg_num_of_imports",
+                  "invocations_per_hour", "avg_argument_size", "avg_loc", "avg_cyc_complexity", "avg_num_of_imports",
                   "e_type_LSFProvider", "e_type_CobaltProvider", "e_type_PBSProProvider",
                   "e_type_LocalProvider", "e_type_KubernetesProvider", "e_type_SlurmProvider"]
 output_features = ["timestamp", "avg_execution_time", "avg_scheduling_time"]
@@ -92,7 +92,7 @@ dataset_dict = DatasetDict({
 })
 
 # Push to Hugging Face Hub
-dataset_dict.push_to_hub("anastasiafrosted/my_sequences_endpoint1")
+dataset_dict.push_to_hub("anastasiafrosted/my_sequences_endpoint2_hour")
 
 # Stop Spark session
 spark.stop()

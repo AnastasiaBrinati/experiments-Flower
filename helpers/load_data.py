@@ -1,84 +1,50 @@
 import logging
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from flwr_datasets import FederatedDataset
 
 logging.basicConfig(level=logging.INFO)  # Configure logging
 logger = logging.getLogger(__name__)  # Create logger for the module
 
-
-def load_azure_data(data_sampling_percentage=0.5, client_id=1, total_clients=2):
-    """Load federated dataset partition based on client ID.
-
-    Args:
-        data_sampling_percentage (float): Percentage of the dataset to use for training.
-        client_id (int): Unique ID for the client.
-        total_clients (int): Total number of clients.
-
-    Returns:
-        Tuple of arrays: `(x_train, y_train), (x_test, y_test)`.
-    """
+def load_data_for_arima(client_id=1, total_clients=2):
+    # Dowloading directly endpoint x client
+    dataset_path = "anastasiafrosted/endpoint" + str(client_id - 1)
 
     # Download and partition dataset
-    fds = FederatedDataset(dataset="anastasiafrosted/azure_prova", partitioners={"train": total_clients})
-    partition = fds.load_partition(client_id - 1, "train")
-    partition.set_format("numpy")
+    #fds_train = FederatedDataset(dataset=dataset_path, partitioners={"train": total_clients})
+    #partition_train = fds_train.load_partition(client_id - 1, "train")
+    #partition_train.set_format("numpy")
 
-    # Divide data on each client: 80% train, 20% test
-    partition = partition.train_test_split(test_size=0.2, seed=42)
+    fds_test = FederatedDataset(dataset=dataset_path, partitioners={"test": total_clients})
+    partition_test = fds_test.load_partition(client_id - 1, "test")
+    partition_test.set_format("numpy")
+    df = pd.DataFrame(partition_test)
+    df.drop("endpoint_uuid", inplace=True, axis=1)
+    df['timestamp'] = df['timestamp'].str[:-9]
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%dT%H:%M:%S.')
+    df = df.dropna()
+    df = df.sort_values("timestamp").set_index('timestamp')
+    df = df.dropna()
+    df = df.asfreq('s').interpolate(method='time')
 
-    # Extract the relevant columns
-    invocations_train = partition["train"]["invocations"]
-    count_for_duration_train = partition["train"]["CountForDuration"]
-    avg_allocated_mb_train = partition["train"]["AverageAllocatedMb"]
-    count_for_memory_train = partition["train"]["CountForMemory"]
-    minute_train = partition["train"]["minute"]
-    trigger_others_train = partition["train"]["Trigger_others"]
-    trigger_orchestration_train = partition["train"]["Trigger_orchestration"]
-    trigger_event_train = partition["train"]["Trigger_event"]
-    trigger_timer_train = partition["train"]["Trigger_timer"]
-    trigger_queue_train = partition["train"]["Trigger_queue"]
-    trigger_storage_train = partition["train"]["Trigger_storage"]
-    trigger_http_train = partition["train"]["Trigger_http"]
+    origin, start_date, end_date = "2022-12-20 00:00:00", "2023-01-06 00:00:00", "2023-07-03 23:00:00"
+    time_period = pd.date_range(start_date, end_date, freq='s')
 
-    invocations_test = partition["test"]["invocations"]
-    count_for_duration_test = partition["test"]["CountForDuration"]
-    avg_allocated_mb_test = partition["test"]["AverageAllocatedMb"]
-    count_for_memory_test = partition["test"]["CountForMemory"]
-    minute_test = partition["test"]["minute"]
-    trigger_others_test = partition["test"]["Trigger_others"]
-    trigger_orchestration_test = partition["test"]["Trigger_orchestration"]
-    trigger_event_test = partition["test"]["Trigger_event"]
-    trigger_timer_test = partition["test"]["Trigger_timer"]
-    trigger_queue_test = partition["test"]["Trigger_queue"]
-    trigger_storage_test = partition["test"]["Trigger_storage"]
-    trigger_http_test = partition["test"]["Trigger_http"]
+    input_features = [
+        "invocations_per_hour", "avg_argument_size", "avg_loc", "avg_num_of_imports", "avg_cyc_complexity",
+        "e_type_LSFProvider", "e_type_CobaltProvider", "e_type_PBSProProvider", "e_type_LocalProvider",
+        "e_type_KubernetesProvider", "e_type_SlurmProvider"
+    ]
 
-    # Combine all features into a single array with multiple features per sample (for both training and test sets)
-    x_train = np.column_stack((
-        invocations_train, count_for_duration_train, avg_allocated_mb_train, count_for_memory_train, minute_train,
-        trigger_others_train, trigger_orchestration_train, trigger_event_train, trigger_timer_train, trigger_queue_train,
-        trigger_storage_train, trigger_http_train
-    ))
+    exogenous_features = df[input_features].iloc[-4000:]
+    target_1 = partition_test["avg_total_execution_time"][-4000:]
+    target_2 = partition_test["avg_system_processing_time"][-4000:]
 
-    x_test = np.column_stack((
-        invocations_test, count_for_duration_test, avg_allocated_mb_test, count_for_memory_test, minute_test,
-        trigger_others_test, trigger_orchestration_test, trigger_event_test, trigger_timer_test, trigger_queue_test,
-        trigger_storage_test, trigger_http_test
-    ))
+    return (exogenous_features, target_1, target_2)
 
-    # The label is 'invocations'
-    y_train = partition["train"]["AverageDuration"]
-    y_test = partition["test"]["AverageDuration"]
 
-    # Apply data sampling
-    num_samples = int(data_sampling_percentage * len(x_train))
-    indices = np.random.choice(len(x_train), num_samples, replace=False)
-    x_train, y_train = x_train[indices], y_train[indices]
-
-    return (x_train, y_train), (x_test, y_test)
-
-def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2):
+def load_data_for_lstm(client_id=1, total_clients=2):
     """Load federated dataset partition based on client ID.
 
     Args:
@@ -90,10 +56,8 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
         Tuple of arrays: `(x_train, y_train), (x_test, y_test)`.
     """
 
-    # Devo inventarmi qualcosa con il client id per il dataset su hgging face così
-    # scarico direttamente un endpoint per client
-
-    dataset_path = "anastasiafrosted/my_sequences_endpoint"+str(client_id)+"_hour"
+    # Dowloading directly endpoint x client
+    dataset_path = "anastasiafrosted/sequenced_endpoint_"+str(client_id-1)
 
     # Download and partition dataset
     fds_train = FederatedDataset(dataset=dataset_path, partitioners={"train": total_clients})
@@ -108,15 +72,13 @@ def load_globus_data(data_sampling_percentage=0.5, client_id=1, total_clients=2)
     input_features = [
         "invocations_per_hour_seq",
         "avg_argument_size_seq", "avg_loc_seq", "avg_num_of_imports_seq", "avg_cyc_complexity_seq",
-        "e_type_LSFProvider_seq", "e_type_CobaltProvider_seq", "e_type_PBSProProvider_seq",
-        "e_type_LocalProvider_seq", "e_type_KubernetesProvider_seq", "e_type_SlurmProvider_seq",
     ]
 
     timestamps_columns = [
         "timestamp_seq", "timestamp_target"
     ]
 
-    target_features = ["avg_execution_time_target", "avg_scheduling_time_target"]
+    target_features = ["avg_total_execution_time_target", "avg_system_processing_time_target"]
 
     # THIS IS WHERE IT CHANGES FOR THE MODEL!!!!
 

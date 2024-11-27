@@ -4,7 +4,7 @@ from pyspark.sql.types import NumericType, ArrayType, DoubleType
 from pyspark.sql.functions import col, udf
 from pyspark.ml import Pipeline  # Import Pipeline
 
-def scale_csv_data(input_path, output_path):
+def scale_csv_data(input_path, output_path, endpoint_id):
     # Create a Spark session
     spark = SparkSession.builder \
         .appName("Scale CSV Data") \
@@ -14,11 +14,17 @@ def scale_csv_data(input_path, output_path):
     df = spark.read.csv(input_path, header=True, inferSchema=True)
 
     # Identify numeric columns
-    numeric_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, NumericType)]
+    numeric_cols = ["invocations_per_hour","avg_loc","avg_cyc_complexity","avg_num_of_imports","avg_argument_size",
+                    "avg_total_execution_time","avg_system_processing_time"]
 
     # Assemble numeric columns into a feature vector
     assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features")
 
+    """
+    you can scale features like avg_loc (e.g., 15.0) alongside avg_total_execution_time (e.g., 2.571232×1092.571232×109) 
+    as long as you use a scaling method designed to handle the large differences in magnitude effectively:
+    Both features are transformed into comparable ranges, eliminating the dominance of large-magnitude features over smaller ones.
+    """
     # Scale the features
     scaler = StandardScaler(inputCol="features", outputCol="scaled_features")
 
@@ -45,10 +51,16 @@ def scale_csv_data(input_path, output_path):
     # Save the scaled data to a new CSV file
     scaled_df.coalesce(1).write.csv(output_path, header=True, mode="overwrite")
 
+    # Save the scaler model to a directory
+    scaler_model_path = "../helpers/scaler/endpoint"+endpoint_id
+    model.stages[1].write().overwrite().save(scaler_model_path)
+
     # Stop the Spark session
     spark.stop()
 
-# Example usage
-input_csv_path = "globus_data/endpoints/endpoint2/endpoint2.csv"
-output_csv_path = "scaled_data/globus/endpoints/endpoint2/"
-scale_csv_data(input_csv_path, output_csv_path)
+
+if __name__ == "__main__":
+    for i in range(10):
+        input_csv_path = "globus_data/endpoints/endpoint"+str(i)+"/endpoint"+str(i)+".csv"
+        output_csv_path = "scaled_data/globus/endpoints/endpoint"+str(i)+"/"
+        scale_csv_data(input_csv_path, output_csv_path, str(i))

@@ -9,42 +9,26 @@ from pyspark.sql import functions as F
 # Initialize Spark session
 spark = SparkSession.builder.appName("Melt and Filter Globus dataset").getOrCreate()
 
-# Load the CSV files into DataFrames
-# ENDPOINTS
-endpoints = spark.read.csv("globus_data/endpoints.csv", header=True, inferSchema=True)
-# FUNCTIONS
-functions = spark.read.csv("globus_data/functions.csv", header=True, inferSchema=True).drop('function_body_uuid')
-# TASKS
-tasks = spark.read.csv("globus_data/tasks.csv", header=True, inferSchema=True).drop('anonymized_user_uuid')
+# Load the CSV file into DataFrame
+data = spark.read.csv("globus_data/total/globus.csv", header=True, inferSchema=True)
 
-# Perform an inner join on the two DataFrames based on the specified columns
-globus = tasks.join(endpoints, on=['endpoint_uuid'], how='inner')
-# Perform an inner join on the two DataFrames based on the specified columns
-globus = globus.join(functions, on=['function_uuid'], how='inner').dropna(how='any')
+# Drop unnecessary columns
+data = data.drop("task_uuid")
+data = data.drop("function_uuid")
+version = [col for col in data.columns if col.startswith("e_vers")]
+data = data.drop(*version)
 
-globus = globus.withColumn("date", date_format(from_unixtime((col("received") / 1_000_000_000).cast(LongType())), "yyyy-MM-dd"))
-globus = globus.withColumn("hour", hour(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
+# Formulate target columns
+# 1: we already have total_execution_time
+# 2: we want from 'waiting for nodes' to 'execution end' = scheduling_time + queue_time + execution_time
+data = data.withColumn("system_processing_time", (col("scheduling_time") + col("queue_time") + col("execution_time")))
 
-# Creazione della colonna 'minute'
-df = globus.withColumn("timestamp", concat_ws(":", col("date"), col("hour")))
-# Calcolo della differenza timestamps in  nuove colonne
-df = df.withColumn("execution_time", (col("execution_end") - col("execution_start")))
-df = df.withColumn("scheduling_time", (col("execution_start") - col("received")))
 
-# Step 1: Get unique `endpoint_type` values
-unique_endpoint_types = [row['endpoint_type'] for row in df.select("endpoint_type").distinct().collect()]
-
-# Step 2: Dynamically add columns for each endpoint type
-for e_type in unique_endpoint_types:
-    column_name = f"e_type_{e_type.replace('.', '_')}"  # Replace dots with underscores
-    df = df.withColumn(column_name, F.when(F.col("endpoint_type") == e_type, 1).otherwise(0))
-
-    # Selezione delle colonne relative a endpoint types
-    endpoint_type_columns = [c for c in df.columns if c.startswith("e_type_")]
-
-# Raggruppamento e calcolo delle metriche
+# Select columns relative to endpoint types
+endpoint_type_columns = [c for c in data.columns if c.startswith("e_type_")]
+# Grouping and calculations
 result = (
-    df.groupBy("endpoint_uuid", "timestamp")
+    data.groupBy("endpoint_uuid", "timestamp")
     .agg(
         count("*").alias("invocations_per_hour"),  # Numero di invocazioni
         avg("loc").alias("avg_loc"),  # Media delle linee di codice
@@ -52,14 +36,15 @@ result = (
         avg("num_of_imports").alias("avg_num_of_imports"),  # Media del numero di importazioni
         avg("argument_size").alias("avg_argument_size"),  # Media della dimensione degli argomenti
         *[first(col(c)).alias(c) for c in endpoint_type_columns],  # Mantenimento delle colonne `e_type_*`
-        avg("execution_time").alias("avg_execution_time"),  # Media del tempo di esecuzione
-        avg("scheduling_time").alias("avg_scheduling_time")  # Media del tempo di scheduling
+        avg("total_execution_time").alias("avg_total_execution_time"),  # Media del tempo di esecuzione
+        avg("system_processing_time").alias("avg_system_processing_time")  # Media del tempo di scheduling
     )
 )
 
-# Ordinare il risultato
+# more Ordering
 result = result.orderBy("timestamp")
 
+# Save in one file
 result.coalesce(1).write.csv("globus_data/flipped/", header=True, mode="overwrite")
 
 # Stop Spark session

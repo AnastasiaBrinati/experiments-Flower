@@ -16,12 +16,10 @@ spark = SparkSession.builder \
 # Load the CSV files into DataFrames
 # ENDPOINTS
 endpoints = spark.read.csv("globus_data/endpoints.csv", header=True, inferSchema=True)
-
 # FUNCTIONS
 functions = spark.read.csv("globus_data/functions.csv", header=True, inferSchema=True)
 # Drop
 functions = functions.drop('function_body_uuid')
-
 # TASKS
 tasks = spark.read.csv("globus_data/tasks.csv", header=True, inferSchema=True)
 # Drop
@@ -37,10 +35,7 @@ tasks_joined = df_joined.join(functions, on=['function_uuid'], how='inner')
 df_clean = tasks_joined.dropna(how='any')
 #df_clean.show(10)
 
-# Assumi che la colonna timestamp sia in nanosecondi
-# Converte da nanosecondi a secondi dividendo per 1 miliardo
-
-# received
+# Convert from nanoseconds to seconds
 df = df_clean.withColumn("date_received", date_format(from_unixtime((col("received") / 1_000_000_000).cast(LongType())), "yyyy-MM-dd"))
 df = df.withColumn("hour_received", hour(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
 df = df.withColumn("minute_received", minute(from_unixtime((col("received") / 1_000_000_000).cast(LongType()))))
@@ -93,7 +88,6 @@ filtered_df = filtered_df.dropna(how='any')
 
 # Order the DataFrame by date
 df = filtered_df.orderBy("date")
-df.show(truncate=False)
 
 # Repartition the DataFrame
 df_repartitioned = df.repartition(1)

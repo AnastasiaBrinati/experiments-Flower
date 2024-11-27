@@ -78,7 +78,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python client.py --server_address=server:8080 --data_percentage=0.6  --client_id=1 --total_clients=2 --batch_size=32 --learning_rate=0.001
+    command: python client.py --server_address=server:8080 --data_percentage=0.6  --client_id=1 --total_clients=2 --batch_size=32 --learning_rate=0.001 --model=arima
     deploy:
       resources:
         limits:
@@ -101,7 +101,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python client.py --server_address=server:8080 --data_percentage=0.6  --client_id=2 --total_clients=2 --batch_size=256 --learning_rate=0.005
+    command: python client.py --server_address=server:8080 --data_percentage=0.6  --client_id=2 --total_clients=2 --batch_size=256 --learning_rate=0.005 --model=arima
     deploy:
       resources:
         limits:

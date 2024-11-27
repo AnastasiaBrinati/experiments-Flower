@@ -17,6 +17,9 @@ parser.add_argument(
 parser.add_argument(
     "--random", action="store_true", help="Randomize client configurations"
 )
+parser.add_argument(
+    "--model", type=str, default="lstm", help="Type of model to be used: [ lstm | arima ]"
+)
 
 
 def create_docker_compose(args):
@@ -117,7 +120,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python client.py --server_address=server:8080 --data_percentage={args.data_percentage}  --client_id={i} --total_clients={args.total_clients} --batch_size={config["batch_size"]} --learning_rate={config["learning_rate"]}
+    command: python client.py --server_address=server:8080 --model={args.model} --data_percentage={args.data_percentage}  --client_id={i} --total_clients={args.total_clients} --batch_size={config["batch_size"]} --learning_rate={config["learning_rate"]}
     deploy:
       resources:
         limits:
